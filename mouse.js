@@ -44,6 +44,8 @@ function onMouseUp(e){
 function drawScreen(){
 	var theCanvas = document.getElementById("GameCanvas");
 	var Context = theCanvas.getContext("2d");
+	Context.drawImage(imgBackground,0,0,960,600);
+	Context.drawImage(imgChar,intMouseX,intMouseY,85,85);
 
 	Context.fillStyle = "#FFF";
 	Context.font = '24px namumgothic';
@@ -51,6 +53,4 @@ function drawScreen(){
 	Context.fillText("발생한 마우스 이벤트는 : " + strMouseStatus,5,5);
 	Context.fillText("마우스 좌표는  x : " + intMouseX + "  y : " + intMouseY,5,32);
 
-	Context.drawImage(imgBackground,0,0,960,600);
-	Context.drawImage(imgChar,intMouseX,intMouseY,85,85);
 }
