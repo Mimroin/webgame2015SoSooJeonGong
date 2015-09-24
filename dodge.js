@@ -4,54 +4,106 @@ var intPlayerX = 460,
     intPlayerY = 270,
     intPlayerWidth = 50,
     intPlayerHeight = 50;
-var moveSpeed = 5;
+var moveSpeed = 2.5;
+var survive_time=0;
 var virus = new Image();
 virus.src = "virus.png";
-var Game_STATE_READY = 0,
-    Game_STATE_GAME = 1,
+var GAME_STATE_READY = 0,
+    GAME_STATE_GAME = 1,
     GAME_STATE_OVER = 2;
-var GameState = Game_STATE_READY;
+var GameState = GAME_STATE_READY;
 
-var FPS = 30;
-var intervalID;
+function onGameReady() {
+    GameState = GAME_STATE_READY;
+    intPlayerX = 460;
+    intPlayerY = 260;
+
+    while (arrViruses.length != 0) {
+        arrViruses.pop();
+    }
+}
+function howSurvive(){
+    survive_time++;
+}
+function onGameStart() {
+    GameState = GAME_STATE_GAME;
+    intervalID1 = setInterval(MoveVirus, 100);
+    intervalID2 = setInterval(howSurvive, 1000);
+    for (var i = 0; i < 50; i++) {
+        var BallType = RandomNextInt(4);
+        var intX, intY, intGoX, intGoY;
+        switch (BallType) {
+        case 1:
+            intX = 0;
+            intY = RandomNextInt(600);
+            intGoX = RandomNextInt(2)/2;
+            intGoY = -2 + RandomNextInt(4)/2;
+            break;
+
+        case 2:
+            intX = 960;
+            intY = RandomNextInt(600);
+            intGoX = RandomNextInt(2) * -1/2;
+            intGoY = -2 + RandomNextInt(4)/2;
+            break;
+
+        case 3:
+            intX = RandomNextInt(960);
+            intY = 0;
+            intGoX = -2 + RandomNextInt(4)/2;
+            intGoY = RandomNextInt(2)/2;
+            break;
+
+        case 4:
+            intX = RandomNextInt(960);
+            intY = 600;
+            intGoX = -2 + RandomNextInt(4)/2;
+            intGoY = RandomNextInt(2) * -1/2    ;
+            break;
+        }
+        arrViruses.push({
+                x: intX,
+                y: intY,
+                go_x: intGoX,
+                go_y: intGoY
+        });
+    }
+}
+
+function onGameOver() {
+    GameState = GAME_STATE_OVER;
+    clearInterval(intervalID1);
+    clearInterval(intervalID2);
+    moveLeft = false;
+    moveRight = false;
+    moveUp = false;
+    moveDown = false;
+}
+
+var arrViruses = new Array();
+
+var FPS = 60;
+var intervalID1;
+var intervalID2;
 var CHAR_COLOR = 0;
 
-var tempVirus1 = {
-    x : 0,
-    y : 0,
-    go_x : 1,
-    go_y : 1
-};
-var tempVirus2 = {
-    x : 960,
-    y : 0,
-    go_x : -1,
-    go_y : 1
-};
-var tempVirus3 = {
-    x : 960,
-    y : 600,
-    go_x : -1,
-    go_y : -1
-};
-var tempVirus4 = {
-    x : 0,
-    y : 600,
-    go_x : 1,
-    go_y : -1
-};
+
 
 var skilltimer, skilltimer_count;
+
 function skill() {
-    var timer = setTimeout(skill_counting,3000);
+    var timer = setTimeout(skill_counting, 3000);
 }
-function skill_counting(){
+
+function skill_counting() {
     CHAR_COLOR++;
 }
 var imgChar = new Image(),
     imgChar_g = new Image();
+imgChar_dead = new Image();
 imgChar.src = "char.png";
 imgChar_g.src = "char_g.png";
+imgChar_dead.src = "char_dead.png";
 
 imgChar.addEventListener("load", drawScreen, false);
 window.addEventListener("keydown", onkeydown, false);
@@ -61,27 +113,62 @@ var moveLeft = false,
     moveRight = false,
     moveUp = false,
     moveDown = false;
-function onGameStart(){
-    intervalID = setInterval(MoveVirus,100);
+
+function RandomNextInt(max) {
+    return 1 + Math.floor(Math.random() * max);
 }
-function MoveVirus(){
-    tempVirus1.x += tempVirus1.go_x * 10;
-    tempVirus1.y += tempVirus1.go_y * 10;
-    tempVirus2.x += tempVirus2.go_x * 10;
-    tempVirus2.y += tempVirus2.go_y * 10;
-    tempVirus3.x += tempVirus3.go_x * 10;
-    tempVirus3.y += tempVirus3.go_y * 10;
-    tempVirus4.x += tempVirus4.go_x * 10;
-    tempVirus4.y += tempVirus4.go_y * 10;
+
+function MoveVirus() {
+    for (var i = 0; i < arrViruses.length; i++) {
+        arrViruses[i].x += arrViruses[i].go_x * 10;
+        arrViruses[i].y += arrViruses[i].go_y * 10;
+        if (IsCollisionWithPlayer(arrViruses[i].x, arrViruses[i].y)) {
+            onGameOver();
+        };
+        if (arrViruses[i].x < 0 || arrViruses[i].x > 960 || arrViruses[i].y < 0 || arrViruses[i].y > 600) {
+            var BallType = RandomNextInt(4);
+            switch (BallType) {
+            case 1:
+                arrViruses[i].x = 0;
+                arrViruses[i].y = RandomNextInt(600);
+                arrViruses[i].go_x = RandomNextInt(2)/2;
+                arrViruses[i].go_y = -2 + RandomNextInt(4)/2;
+                break;
+
+            case 2:
+                arrViruses[i].x = 960;
+                arrViruses[i].y = RandomNextInt(600);
+                arrViruses[i].go_x = RandomNextInt(2) * -1/2;
+                arrViruses[i].go_y = -2 + RandomNextInt(4)/2;
+                break;
+
+            case 3:
+                arrViruses[i].x = RandomNextInt(960);
+                arrViruses[i].y = 0;
+                arrViruses[i].go_x = -2 + RandomNextInt(4)/2;
+                arrViruses[i].go_y = RandomNextInt(2)/2;
+                break;
+
+            case 4:
+                arrViruses[i].x = RandomNextInt(960);
+                arrViruses[i].y = 600;
+                arrViruses[i].go_x = -2 + RandomNextInt(4)/2;
+                arrViruses[i].go_y = RandomNextInt(2) * -1/2;
+                break;
+            }
+        }
+
+    }
     drawScreen();
 }
+
 function onkeydown(e) {
-    if (GameState == Game_STATE_READY) {
+    if (GameState == GAME_STATE_READY) {
         if (e.keyCode == 13) {
-            GameState = Game_STATE_GAME;
+            GameState = GAME_STATE_GAME;
             onGameStart();
         }
-    } else if (GameState == Game_STATE_GAME) {
+    } else if (GameState == GAME_STATE_GAME) {
         switch (e.keyCode) {
         case 32:
             CHAR_COLOR++;
@@ -106,7 +193,7 @@ function onkeydown(e) {
         }
     } else if (GameState == GAME_STATE_OVER) {
         if (e.keyCode == 13) {
-            GameState = Game_STATE_READY;
+            onGameReady();
         }
     }
     drawScreen();
@@ -162,30 +249,49 @@ function drawScreen() {
     var Context = theCanvas.getContext("2d");
 
     Context.drawImage(imgBackground, 0, 0, 960, 600);
-    if (CHAR_COLOR % 2 == 1) {
-        Context.drawImage(imgChar, intPlayerX, intPlayerY, intPlayerWidth, intPlayerHeight);
-        moveSpeed = 9;
+    if (GameState == GAME_STATE_GAME) {
+        if (CHAR_COLOR % 2 == 1) {
+            Context.drawImage(imgChar, intPlayerX, intPlayerY, intPlayerWidth, intPlayerHeight);
+            moveSpeed = 4.5;
+        }
+        if (CHAR_COLOR % 2 == 0) {
+            Context.drawImage(imgChar_g, intPlayerX, intPlayerY, intPlayerWidth, intPlayerHeight);
+            moveSpeed = 2.5;
+        }
     }
-    if (CHAR_COLOR % 2 == 0) {
-        Context.drawImage(imgChar_g, intPlayerX, intPlayerY, intPlayerWidth, intPlayerHeight);
-        moveSpeed = 5;
+    if (GameState == GAME_STATE_OVER) {
+        Context.drawImage(imgChar_dead, intPlayerX, intPlayerY, intPlayerWidth, intPlayerHeight);
     }
-    if (GameState == Game_STATE_READY) {
-        Context.fillText("Ready!", 470, 250);
-    }
-    else if (GameState == Game_STATE_GAME) {
-        Context.fillText("Go!", 475, 250);
-        Context.drawImage(virus,tempVirus1.x,tempVirus1.y);
-        Context.drawImage(virus,tempVirus2.x,tempVirus2.y);
-        Context.drawImage(virus,tempVirus3.x,tempVirus3.y);
-        Context.drawImage(virus,tempVirus4.x,tempVirus4.y);
-    }
-    else if (GameState == GAME_STATE_OVER) {
+    if (GameState == GAME_STATE_READY) {
         Context.font = '60px NanumGothicCoding';
-        Context.fillText("Game Over", 400, 300);
+        Context.fillStyle = "#000";
+        Context.fillText("Ready!", 400, 300);
+    } else if (GameState == GAME_STATE_GAME) {
+        Context.font = '20px NanumGothicCoding';
+        Context.fillStyle = "#FFF";
+        Context.fillText("생존시간 : "+survive_time+"초",800,20);
+        for (var i = 0; i < arrViruses.length; i++) {
+            Context.drawImage(virus, arrViruses[i].x, arrViruses[i].y);
+        }
+    } else if (GameState == GAME_STATE_OVER) {
+        Context.font = '60px NanumGothicCoding';
+        Context.fillStyle = "#000";
+        Context.fillText("Game Over", 335, 310);
+        Context.font = '20px NanumGothicCoding';
+        Context.fillStyle = "#FFF";
+        Context.fillText("생존시간 : "+survive_time+"초",800,20);
+        for (var i = 0; i < arrViruses.length; i++) {
+            Context.drawImage(virus, arrViruses[i].x, arrViruses[i].y);
+        }
     }
     Update();
 }
 
-update1 = setInterval(Update, 40);
+function IsCollisionWithPlayer(x, y) {
+    if (intPlayerX + 55 > x && intPlayerX < x + 20 && intPlayerY < y + 20 && intPlayerY + 50 > y) {
+        return true;
+    }
+    return false;
+}
+update1 = setInterval(Update, 1);
 rending = setInterval(drawScreen, 1000 / FPS);
